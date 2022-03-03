@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<head>
+	<title>Fireworks: CSC 240 Final Project</title>
+	<script src="three.min.js"></script>
+  <script src="GLTFLoader.js"></script>
+	</script>
+
+	<script>
+		var scene, camera, renderer; // Three.js rendering basics
+    var canvas; // The canvas on which the image is rendered
+
+    // texture maps
+    var loader = new THREE.TextureLoader();
+    var particleTexture = loader.load("particle.png"); // texture for particles
+    var grassColorTexture = loader.load( 'grass-texturemap.png' ); // grass texture and tiling
+    grassColorTexture.wrapS = THREE.RepeatWrapping;
+    grassColorTexture.wrapT = THREE.RepeatWrapping;
+    grassColorTexture.repeat.set( 5, 5 );
+    var grassBumpTexture = loader.load( 'grass-bumpmap.png' );
+    grassBumpTexture.wrapS = THREE.RepeatWrapping;
+    grassBumpTexture.wrapT = THREE.RepeatWrapping;
+    grassBumpTexture.repeat.set( 5, 5 );
+    var skyColorTexture = loader.load( 'nightskycolor.png' ); // sky texture
+    
+    // fireworks variables
+    var particleCount = 400;  // number of particles
+    var colorArray = ["palevioletred", "orange", "gold", "rebeccapurple", "limegreen", "darkturquoise", "royalblue", "aquamarine", "red"];
+    var fireworksArray = []; // contains the active fireworks
+
+    // character variables
+    var character; // virtual object for entire character
+    var rightShoulder, leftShoulder; // rotation points for arms
+    var rightHip, leftHip; // rotation points for legs
+    var gltfObj;  // blender model of character body
+
+    // animation variables
+    var animationCounter = 0;
+
+
+
+    // ---------- FUNCTIONS ----------
+
+    /** creates particle cloud for a single firework */
+    function createFireworkParticles() {
+      let velocityArray = [];
+
+      // randomly chooses an index between 0 and 8 to choose a random color from the colorArray
+      let colorIndex = Math.floor(Math.random() * 9); 
+      
+      // creates the particle variables
+      var pgeo = new THREE.Geometry();
+      var pmat = new THREE.PointsMaterial({ map: particleTexture, alphaMap: particleTexture, transparent: true, size: 5, depthWrite: false, blending: THREE.AdditiveBlending });
+      pmat.color.set(colorArray[colorIndex]);
+
+      // randomly chooses size of firework between 0.2 and 0.8
+      let fireworkSize = 0.1 * (Math.random() * (9-2) + 2);
+
+      // randomly chooses center position of the firework within certain bounds
+      var angle = Math.random() * 361; // between 0 & 360
+      var pX = 150 * Math.sin(angle),
+          pY = Math.random() * (171-80) + 80,   // between 80 & 170
+          pZ = 150 * Math.cos(angle);
+
+      // creates the individual particles
+      for (var p = 0; p < particleCount; p++) {
+        // set the center position of the firework
+        particle = new THREE.Vector3(pX, pY, pZ);
+        pgeo.vertices.push(particle); // add it to the geometry
+
+        // create velocity
+        var vpX = Math.random()-0.5,
+            vpY = Math.random()-0.5,
+            vpZ = Math.random()-0.5,
+            vp = new THREE.Vector3(vpX, vpY, vpZ).normalize().multiplyScalar(fireworkSize);
+        velocityArray.push(vp);
+      }
+      
+      // creates the particle system
+      let particles = new THREE.Points(pgeo,pmat);
+      scene.add(particles);
+      particles.geometry.dynamic = true;  // tell renderer that points will be moving
+
+      // creates a point light at center of firework (slowed the program down so I'm commenting this out)
+      // let fireworkLight = new THREE.PointLight( colorArray[colorIndex], 0.2);
+      // fireworkLight.position.set(pX, pY, pZ);
+
+      // creates an object to keep track of the variables relating to a firework
+      const firework = {
+        particleCloud: particles, // the particle system
+        size: fireworkSize, // size of explosion
+        velocity: velocityArray,  // velocities of particles
+        counter: 130,  // how long since the firework was created
+        // light: fireworkLight, // light from firework (slowed the program down so I'm commenting this out)
+        isAnimating: true   // whether the firework is still being animated
+      };
+
+      return firework;
+    } // ~~END of createFireworkParticles()~~
+    
+
+    /** creates the scene */
+    function createWorld() {
+        renderer.setClearColor(0); // sets background color to black
+        scene = new THREE.Scene(); // creates a new scene 
+    
+        // create a camera, sitting on the positive z-axis
+        camera = new THREE.PerspectiveCamera(60, canvas.width/canvas.height, 1, 1000);
+        camera.position.set(0,30,100);
+        camera.lookAt(0,30,0);
+
+        // creates the lights
+        var light = new THREE.DirectionalLight( 'white', 0.7 );
+        light.position.set( 0, 50, 20 );
+        scene.add(light);
+        var light2 = new THREE.AmbientLight( 'white', 0.2 );
+        scene.add(light2);
+        var light3 = new THREE.DirectionalLight( 'white', 0.5 );
+        light3.position.set( 0, 1, 1 );
+        scene.add(light3);
+
+        // creates the ground and sky
+        var ground = new THREE.Mesh( new THREE.PlaneGeometry(500,500) , new THREE.MeshPhongMaterial( {map: grassColorTexture, bumpMap: grassBumpTexture, bumpScale: 10} ));
+        ground.rotation.x = -Math.PI/2;
+        scene.add(ground);
+        var skyboxMaterial = new THREE.MeshBasicMaterial( {map: skyColorTexture, side: THREE.BackSide} );
+        var skybox = new THREE.Mesh( new THREE.BoxGeometry(1000,1000,1000), skyboxMaterial );
+        scene.add(skybox);
+
+        // creates a virtual object for the character and rotation points for the arms and legs
+        character = new THREE.Group();
+        rightShoulder = new THREE.Group();
+        character.add(rightShoulder);
+        leftShoulder = new THREE.Group();
+        character.add(leftShoulder);
+        rightHip = new THREE.Group();
+        character.add(rightHip);
+        leftHip = new THREE.Group();
+        character.add(leftHip);
+
+        // imports blender model
+        var gltfloader = new THREE.GLTFLoader();
+        gltfloader.load('panda.glb', (gltf) => {
+          gltfObj = gltf.scene;
+          character.add(gltfObj);
+          gltfObj.scale.set(20, 20, 20);
+          gltfObj.position.set(0,-20,0);
+          render(); // begin rendering
+        });
+        
+        // creates the arms and legs
+        var rightArm = new THREE.Mesh ( new THREE.CylinderGeometry(2.5,5,30,20), new THREE.MeshLambertMaterial( {color: 0x464646}));
+        rightArm.position.set(15,3,0);
+        rightArm.rotation.z = -Math.PI/3;
+        rightShoulder.add(rightArm);
+        var leftArm = new THREE.Mesh ( new THREE.CylinderGeometry(2.5,5,30,20), new THREE.MeshLambertMaterial( {color: 0x464646}));
+        leftArm.position.set(-15,3,0);
+        leftArm.rotation.z = Math.PI/3;
+        leftShoulder.add(leftArm);
+        var rightLeg = new THREE.Mesh ( new THREE.CylinderGeometry(5,2.5,15,20), new THREE.MeshLambertMaterial( {color: 0x464646}));
+        rightLeg.position.set(10,-20,0);
+        rightLeg.rotation.z = Math.PI/5;
+        rightHip.add(rightLeg);
+        var leftLeg = new THREE.Mesh ( new THREE.CylinderGeometry(5,2.5,15,20), new THREE.MeshLambertMaterial( {color: 0x464646}));
+        leftLeg.position.set(-10,-20,0);
+        leftLeg.rotation.z = -Math.PI/5;
+        leftHip.add(leftLeg);
+
+        // adds character to the scene
+        character.position.y = 26;
+        scene.add(character);
+    } // ~~END of createWorld()~~
+
+
+    /** firework explosion animation */
+    function fireworkExplosion(firework) {
+      for (var p = particleCount-1; p >= 0; p--) {
+        firework.velocity[p].y -= 0.01;
+        firework.particleCloud.geometry.vertices[p].add(firework.velocity[p]);
+        firework.particleCloud.material.opacity = firework.counter/100; // fades the firework's opacity based on how long since it was created
+      }
+      firework.particleCloud.geometry.verticesNeedUpdate = true;
+      if (firework.counter > 120) {
+        firework.counter -= 0.2;
+      } else if (firework.counter > 0) {
+        firework.counter -= 5;
+      } else {
+        firework.isAnimating = false;
+        firework.particleCloud.geometry.dispose();
+      }
+    } // ~~END of fireworkExplosion()~~
+
+
+    /** renders the scene */
+    function render() {
+        requestAnimationFrame( render );
+
+        // camera movement
+        camera.position.x = 100 * Math.sin(animationCounter*0.02);
+        camera.position.z = 100 * Math.cos(animationCounter*0.02);
+        camera.lookAt(0,30,0);
+
+        // randomly creates fireworks
+        if (Math.random() < 0.2) {
+          let firework = createFireworkParticles();
+          fireworksArray.push(firework);
+        }
+
+        // firework animation
+        for (var i = fireworksArray.length-1; i >= 0; i--) {
+          fireworkExplosion(fireworksArray[i]);
+          // add firework light for some fireworks (slowed the program down so I'm commenting this out)
+          // if (i == 10) { 
+            // scene.add(fireworksArray[i].light);
+          // }
+
+          // removing fireworks that are no longer visible
+          if (!fireworksArray[i].isAnimating) {
+            fireworksArray.splice(i,1);
+            // remove firework lights (slowed the program down so I'm commenting this out)
+            // scene.remove(fireworksArray[i].light);
+            // fireworksArray[i].light.dispose();
+          }
+        }
+        
+        // character animation
+        character.position.y = 10 * Math.sin(animationCounter*0.2) + 35;
+        rightShoulder.rotation.z = 0.3 * Math.sin(animationCounter*0.2);
+        leftShoulder.rotation.z = -0.3 * Math.sin(animationCounter*0.2);
+        rightHip.rotation.z = -0.1 * Math.sin(animationCounter*0.2);
+        leftHip.rotation.z = 0.1 * Math.sin(animationCounter*0.2);
+        animationCounter += 0.3;
+
+        renderer.render(scene, camera);
+    } // ~~END of render()~~
+
+
+    //----------------------------------------------------------------------------------
+
+    // The init() function is called by the onload event when the document has loaded.
+    function init() {
+        try {
+            canvas = document.getElementById("glcanvas");
+            renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true} );
+        }
+        catch (e) {
+            document.getElementById("canvas-holder").innerHTML = "<h3><b>WebGL is not available.</b><h3>";
+            return;
+        }
+    
+        // create world
+        createWorld();
+    }
+
+	</script>
+
+</head>
+
+<body onload="init()">
+	<div id="canvas-holder">
+    <canvas id="glcanvas" width="1200" height="800"></canvas>
+	</div>
+</body>
+
+</html>
