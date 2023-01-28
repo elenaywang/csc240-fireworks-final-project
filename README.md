@@ -6,7 +6,10 @@
 *Instructor:* Nick Howe      
 *Timeline:* December 2021      
 
-*Link to Replit:* https://Fireworks-CSC-240-Final-Project.ewang88.repl.co
+*Link to demo on Replit:* https://Fireworks-CSC-240-Final-Project.ewang88.repl.co
+
+### *How to run this project:*       
+To run a demo of this project, simply click the link above. The project will immediately begin running as soon as the window is opened.
 
 ### *Overview:*      
 This is my final project for the CSC 240 Computer Graphics class at Smith College. Out of the four project options, I chose the "Animated Short Movie" option. My main goal for this project was to learn how to use particle systems in three.js to simulate fireworks. I also incorporated multiple computer graphics concepts that we learned over the Fall 2021 semester, including texture mapping, hierarchical modeling, and camera movement.
@@ -40,7 +43,7 @@ The 3D panda model was created in Blender. The code was written in JavaScript an
 * grass-texturemap.png: color texture map to create the appearance of grass on the ground
 * instructions.md: contains the instructions for this project as provided by the course instructor, Nick Howe
 * nightskycolor.png: color texture map to create the appearance of a night sky
-* panda.glb: glb file for 3D Blender model of panda character
+* panda.glb: GLB file for 3D Blender model of panda character
 * particle.png: color texture map for the individual firework particles
 * README.md: contains information about the project
 * three.min.js: contains the three.js library
