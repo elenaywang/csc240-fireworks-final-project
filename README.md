@@ -19,7 +19,7 @@ The camera circles around a panda who is watching fireworks in a grass field whi
 (Side note: I tried adding point lights in the center of the fireworks, but doing so causes the animation to lag. I've commented out the corresponding lines of code so that the animation can run properly.)
 
 ### *What I used:*      
-The 3D panda model was created in Blender. The code was written in JavaScript and uses the three.js library. The sources for the texture maps and coding help are listed below.
+The 3D panda model was created in Blender. The code was written in JavaScript. I used the [three.js library](https://threejs.org/) to create and display 3D graphics and used [GLTFLoader](https://threejs.org/docs/#examples/en/loaders/GLTFLoader) to import GLB files into three.js. The sources for the texture maps and coding help are listed below.
 
 *Resources:*    
 1. Particle system code: CSC 240 Lab 15   
