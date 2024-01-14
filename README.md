@@ -6,7 +6,7 @@
 *Instructor:* Nick Howe      
 *Timeline:* December 2021      
 
-*Link to demo on Replit:* https://Fireworks-CSC-240-Final-Project.ewang88.repl.co
+*Link to demo on Replit:* https://6d72454c-c454-4c0d-8180-9861bc7ae124-00-38z49jteozqjg.global.replit.dev/
 
 ### *How to run this project:*       
 To run a demo of this project, simply click the link above. The project will immediately begin running as soon as the window is opened.
