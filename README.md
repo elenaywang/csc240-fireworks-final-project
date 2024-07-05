@@ -5,12 +5,8 @@
 *Course:* CSC 240 Computer Graphics, Fall 2021      
 *Instructor:* Nick Howe      
 *Timeline:* December 2021      
-
-*Link to demo on Replit:* https://6d72454c-c454-4c0d-8180-9861bc7ae124-00-38z49jteozqjg.global.replit.dev/
-
-### *How to run this project:*       
-To run a demo of this project, simply click the link above. The project will immediately begin running as soon as the window is opened.
-
+   
+   
 ### *Overview:*      
 This is my final project for the CSC 240 Computer Graphics class at Smith College. Out of the four project options, I chose the "Animated Short Movie" option. My main goal for this project was to learn how to use particle systems in three.js to simulate fireworks. I also incorporated multiple computer graphics concepts that we learned over the Fall 2021 semester, including texture mapping, hierarchical modeling, and camera movement.
 
